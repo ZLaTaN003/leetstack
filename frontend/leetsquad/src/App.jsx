@@ -1,32 +1,40 @@
 import { useState, useEffect } from 'react'
+import { supabase } from './supabaseClient'
+import Auth from './Auth'
+import Dashboard from './Dashboard'
 
-
+import { AppLayout } from './components/layout/AppLayout';
 function App() {
-  
+  const [session, setSession] = useState(null)
+  const [loading, setLoading] = useState(true)
 
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+      setLoading(false)
+    })
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-screen">Loading...</div>
+  }
 
   return (
-    <>
-      <div className="login-box">
-        <h2>LeetSquad</h2>
-        <form action={"http://localhost:3000/api/signup"} method="POST">
-          <div className="user-box">
-            <input type="text" name="email" required="" />
-            <label>Email</label>
 
-             <input type="password" name="password" required="" />
-            <label>Password</label>
+    
 
+      <AppLayout>
+      {!session ? <Auth /> : <Dashboard session={session} />}
+</AppLayout>
 
-              <input type="text" name="leetcodeusername" required="" />
-              <label>LeetCode Username</label>
-          </div>
-         
-         <button type="submit">Sign Up</button>
-        </form>
-      </div>
-
-    </>
   )
 }
 
