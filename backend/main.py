@@ -16,44 +16,90 @@ supabase_client = create_client(app.config["SUPABASE_URL"], app.config["SUPABASE
 app.dbclient = supabase_client
 
 
-CORS(app,origins=["http://localhost:3001","http://localhost:5173","http://localhost:3000"])
+CORS(
+    app,
+    origins=["*"],
+    allow_headers=["Content-Type", "Authorization"],
+
+)
 app.register_blueprint(api_bp)
 
 
 @app.route("/api/update_profile", methods=["POST"])
 def update_profile():
-    
-    data = request.json
-    leetcodename = data.get("leetcodename")
-    user_id = data.get("user_id")
+    query = """
+    query getUserStats($username: String!) {
+    matchedUser(username: $username) {
+        profile { ranking }
+        submitStatsGlobal {
+        acSubmissionNum { difficulty count submissions }
+        }
+    }
+    }
+    """
 
-    response = requests.get(f"https://leetcode-stats-api.herokuapp.com/{leetcodename}")
+    data = request.json
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    token = auth_header.split(" ")[1]
+    user = app.dbclient.auth.get_user(token)
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    leetcodename = data.get("leetcodename")
+    payload = {"query": query, "variables": {"username": leetcodename}}
+
+    user_id = user.user.id
+
+    print("Making request to LeetCode API for:", leetcodename)
+
+    response = requests.post(
+        "https://leetcode.com/graphql",
+        json=payload,
+        headers={
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0",
+        },
+    )
     if response.status_code != 200:
         return jsonify({"error": "Failed to fetch data from LeetCode API."}), 500
-    
-    leetcode_data = response.json()
 
-
-    if not user_id:
-        return jsonify({"error": "User ID is required."}), 400
+    res = response.json()
+    print("LeetCode API response:", res)
 
     try:
-        response = app.dbclient.table("profiles").upsert(
-            {
-                "profileid": user_id,
-                "profilename": leetcodename,
-                "profileavatarurl": f"https://api.dicebear.com/9.x/dylan/svg?seed={leetcodename}",
-                "leetrank": leetcode_data.get("ranking"),
-                "acceptancerate": leetcode_data.get("acceptanceRate"),
-                "easysolved": leetcode_data.get("easySolved"),
-                "mediumsolved": leetcode_data.get("mediumSolved"),
-                "hardsolved": leetcode_data.get("hardSolved"),
-                
+        response = (
+            app.dbclient.table("profiles")
+            .upsert(
+                {
+                    "profileid": user_id,
+                    "profilename": leetcodename,
+                    "profileavatarurl": f"https://api.dicebear.com/9.x/dylan/svg?seed={leetcodename}",
+                    "leetrank": res["data"]["matchedUser"]["profile"]["ranking"],
+                    "easysolved": res["data"]["matchedUser"]["submitStatsGlobal"][
+                        "acSubmissionNum"
+                    ][1]["count"],
+                    "mediumsolved": res["data"]["matchedUser"]["submitStatsGlobal"][
+                        "acSubmissionNum"
+                    ][2]["count"],
+                    "hardsolved": res["data"]["matchedUser"]["submitStatsGlobal"][
+                        "acSubmissionNum"
+                    ][3]["count"],
+                }
+            )
+            .execute()
+        )
 
-
-            }
-        ).execute()
-
-        return jsonify({"message": "Profile updated successfully.", "data": response.data}), 200
+        return (
+            jsonify({"message": "Profile updated successfully."}),
+            200,
+        )
     except Exception as e:
+        print("Error updating profile:", e)
         return jsonify({"error": str(e)}), 500
+
+
+if __name__ == "__main__":
+    app.run(debug=True, host="127.0.0.1", port=5000)
