@@ -100,6 +100,26 @@ def update_profile():
         print("Error updating profile:", e)
         return jsonify({"error": str(e)}), 500
 
+@app.route("/api/get_leetcode_ranks", methods=["GET"])
+def get_leetcode_ranks():
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    try:
+        profiles = (
+            app.dbclient.table("profiles")
+            .select(
+                "profilename, profileavatarurl, leetrank, easysolved, mediumsolved, hardsolved"
+            )
+            .order("leetrank")
+            .execute()
+        )
+        print(profiles,type(profiles))
+        return jsonify(profiles.data), 200
+    except Exception as e:
+        print("Error fetching profiles:", e)
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(debug=True, host="127.0.0.1", port=5000)

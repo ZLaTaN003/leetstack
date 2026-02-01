@@ -17,9 +17,8 @@ export function AppLayout({ children }) {
     }}
   />
 
-    <div className="relative z-20"><div className="flex justify-center">{children}</div></div>
+    <div className="relative z-20"><div>{children}</div></div>
 
-  {/* Your Content/Components */}
 </div>
 
   )

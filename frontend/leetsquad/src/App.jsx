@@ -1,37 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "./supabaseClient";
 import Auth from "./Auth";
-import Dashboard from "./Dashboard";
-
+import Home from "./Home";
 import { AppLayout } from "./components/layout/AppLayout";
+import Navbar from './components/NavBar.jsx'
 function App() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
-  const hasUpdatedProfile = useRef(false);
-
-  async function updateProfile(currentSession) {
-    if (!currentSession) {
-      console.log("No currentSession found");
-      return;
-    } else {
-      console.log("Session found:", currentSession);
-    }
-
-    const response = await fetch("http://127.0.0.1:5000/api/update_profile", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${currentSession.access_token}`,
-      },
-      body: JSON.stringify({
-        leetcodename: currentSession.user.user_metadata.leetcodename,
-      }),
-    });
-    const result = await response.json();
-    if (result.error) {
-      alert(result.error);
-    }
-  }
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -41,23 +16,10 @@ function App() {
     });
 
     const listener = supabase.auth.onAuthStateChange((event, session) => {
-      setTimeout(async () => {
-        console.log("Auth event:", event);
-        if (event === "SIGNED_IN") {
-          setSession(session);
-          setLoading(false);
-          if (!hasUpdatedProfile.current) {
-            updateProfile(session);
-            hasUpdatedProfile.current = true;
-          }
-        }
+      console.log("Auth state changed:", event, session);
+      setSession(session);
+      setLoading(false);
 
-        if (event === "SIGNED_OUT") {
-          console.log("User signed out");
-          setSession(null);
-          setLoading(false);
-        }
-      }, 0);
     });
 
     return () => {
@@ -75,7 +37,9 @@ function App() {
 
   return (
     <AppLayout>
-      {!session ? <Auth session={session} /> : <Dashboard session={session} />}
+          <Navbar session={session} />
+
+      {!session ? <Auth session={session} /> : <Home session={session} />}
     </AppLayout>
   );
 }

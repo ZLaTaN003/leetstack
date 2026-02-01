@@ -45,7 +45,7 @@ export default function Auth() {
       alert(error.message);
     } else {
       alert(
-        "Sign-up successful! Please check your email to confirm your account.",
+        "Please check your email to confirm your account.",
       );
     }
 
@@ -53,6 +53,8 @@ export default function Auth() {
   };
 
   return (
+
+    <div className="flex justify-center align-center">
     <div className="w-full max-w-md flex flex-col p-8 rounded-md shadow-md bg-auto mt-20">
       <div className="title flex flex-col items-center mb-6">
         <h2 className="font-bold text-2xl">Welcome to LeetSquad</h2>
@@ -114,6 +116,8 @@ export default function Auth() {
           </Button>
         </FieldGroup>
       </FieldSet>
+    </div>
+
     </div>
   );
 }
