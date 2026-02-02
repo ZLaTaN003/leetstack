@@ -3,10 +3,15 @@ import { supabase } from "./supabaseClient";
 import Auth from "./Auth";
 import Home from "./Home";
 import { AppLayout } from "./components/layout/AppLayout";
-import Navbar from './components/NavBar.jsx'
+import Navbar from "./components/NavBar.jsx";
 function App() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const [userprofiledata, setUserProfileData] = useState(null);
+  const fetchedUserProfile = useRef(null);
+
+
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -19,13 +24,48 @@ function App() {
       console.log("Auth state changed:", event, session);
       setSession(session);
       setLoading(false);
-
     });
 
     return () => {
       listener.data.subscription.unsubscribe();
     };
   }, []);
+
+
+    useEffect(() => {
+    if (!session) {
+      return;
+    }
+    if (fetchedUserProfile.current === session.user.id) {
+      console.log("User profile already fetched");
+      return;
+    }
+
+    fetchedUserProfile.current = session.user.id;
+
+    const fetchUserProfile = async () => {
+      try {
+        let username = session.user.user_metadata.leetcodename;
+        const response = await fetch(
+          "http://127.0.0.1:5000/api/get_user_profile?username=" + username,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session.access_token}`,
+            },
+          },
+        );
+        const userprofile = await response.json();
+        setUserProfileData(userprofile);
+        console.log("Fetched user profile:", userprofile);
+      } catch (error) {
+        console.error("Failed to fetch user profile", error);
+      }
+    };
+
+    fetchUserProfile();
+  }, [session]);
 
   if (loading) {
     return (
@@ -36,11 +76,12 @@ function App() {
   }
 
   return (
-    <AppLayout>
-          <Navbar session={session} />
-
-      {!session ? <Auth session={session} /> : <Home session={session} />}
-    </AppLayout>
+    <>
+      <Navbar session={session} profileimage={userprofiledata?.profileavatarurl} />
+      <AppLayout>
+        {!session ? <Auth session={session} /> : <Home session={session} userprofile={userprofiledata} />}
+      </AppLayout>
+    </>
   );
 }
 

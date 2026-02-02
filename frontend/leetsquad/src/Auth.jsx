@@ -54,7 +54,7 @@ export default function Auth() {
 
   return (
 
-    <div className="flex justify-center align-center">
+    <div className="flex justify-center align-center w-full">
     <div className="w-full max-w-md flex flex-col p-8 rounded-md shadow-md bg-auto mt-20">
       <div className="title flex flex-col items-center mb-6">
         <h2 className="font-bold text-2xl">Welcome to LeetSquad</h2>

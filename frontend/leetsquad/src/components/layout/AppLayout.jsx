@@ -17,7 +17,7 @@ export function AppLayout({ children }) {
     }}
   />
 
-    <div className="relative z-20"><div>{children}</div></div>
+    <div className="relative z-20"><div className="flex ">{children}</div></div>
 
 </div>
 

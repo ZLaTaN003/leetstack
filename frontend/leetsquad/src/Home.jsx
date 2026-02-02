@@ -1,13 +1,17 @@
-import { useRef, useEffect, useState } from "react";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Trophy, Medal, Crown } from "lucide-react"; 
+import { useRef, useEffect, useState, use } from "react";
+import { Trophy } from "lucide-react";
+import LeaderboardList from "@/components/ui/LeaderBoardList";
+import { ChartPieSimple } from "@/components/ui/PieChart";
+import { ChartLineDefault } from "@/components/ui/LineChart";
 
-export default function Home({ session }) {
-  const hasUpdatedProfile = useRef(false);
-  const hasUpdatedLeaderboard = useRef(false);
-  
+export default function Home({ session,userprofile }) {
+
+
   const [gldata, setGldata] = useState([]);
-  const [loading, setLoading] = useState(true); // Added loading state for better UX
+  const [loading, setLoading] = useState(true);
+
+    const updatedLeaderboardUser = useRef(null);
+  const updatedProfileUser = useRef(null);
 
   async function updateProfile(currentSession) {
     if (!currentSession) return;
@@ -32,34 +36,38 @@ export default function Home({ session }) {
 
   useEffect(() => {
     if (!session) {
-      hasUpdatedProfile.current = false;
       return;
     }
-    if (!hasUpdatedProfile.current) {
+    if (updatedProfileUser.current !== session.user.id) {
       updateProfile(session);
-      hasUpdatedProfile.current = true;
+      updatedProfileUser.current = session.user.id;
     }
   }, [session]);
 
   useEffect(() => {
     if (!session) {
-      hasUpdatedLeaderboard.current = false;
       return;
     }
 
-    if (hasUpdatedLeaderboard.current) return;
+    if (updatedLeaderboardUser.current === session.user.id) {
+      console.log("Leaderboard already updated");
+      return;
+    }
 
-    hasUpdatedLeaderboard.current = true;
-    
+    updatedLeaderboardUser.current = session.user.id;
+
     const fetchLeaderboard = async () => {
       try {
-        const response = await fetch("http://127.0.0.1:5000/api/get_leetcode_ranks", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
+        const response = await fetch(
+          "http://127.0.0.1:5000/api/get_leetcode_ranks",
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session.access_token}`,
+            },
           },
-        });
+        );
         const data = await response.json();
         setGldata(data);
       } catch (error) {
@@ -72,22 +80,19 @@ export default function Home({ session }) {
     fetchLeaderboard();
   }, [session]);
 
-  if (!session) return <div className="p-10 text-center">Please log in to view the leaderboard.</div>;
+
+
+  if (!session)
+    return (
+      <div className="p-10 text-center">
+        Please log in to view the leaderboard.
+      </div>
+    );
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl">
-
-     
-        
-        <div className="text-center space-y-2 flex justify-center flex-col mb-8 align-middle">
-          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
-            LeetCode Leaderboard
-          </h2>
-         
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200 flex justify-start flex-col">
+    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 w-full flex lg:flex-row flex-col items-center gap-20 bg-red-50 justify-center">
+      <div className="max-w-3xl w-full h-full">
+        <div className=" min-h-100 bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200 flex justify-start flex-col">
           <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
             <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
               <Trophy className="w-5 h-5 text-yellow-500" />
@@ -98,87 +103,37 @@ export default function Home({ session }) {
             </span>
           </div>
 
-          <div className=" divide-slate-100">
+          <div className="">
             {loading ? (
-              <div className="p-8 text-center text-slate-500">Loading rankings...</div>
+              <div className="p-8 text-center text-slate-500">
+                Loading rankings...
+              </div>
             ) : (
-              <LeaderboardList data={gldata} />
+              <LeaderboardList data={gldata} username={session.user.user_metadata.leetcodename} />
             )}
           </div>
         </div>
       </div>
 
-      
+      <div className="visuals flex flex-col lg:w-2xl ">
+        <div className="linechart w-full mb-8 ">
+          <ChartLineDefault session={session} />
+        </div>
+        <div className="piechart">
+          <ChartPieSimple
+            chartData={[
+              { difficulty: "Easy", solved: userprofile?.easysolved || 0, fill: "var(--color-easy)" },
+              {
+                difficulty: "Medium",
+                solved: userprofile?.mediumsolved || 0,
+                fill: "var(--color-medium)",
+              },
+              { difficulty: "Hard", solved: userprofile?.hardsolved || 0, fill: "var(--color-hard)" },
+            ]}
+            totalsolved={userprofile?.easysolved + userprofile?.mediumsolved + userprofile?.hardsolved}
+          />
+        </div>
+      </div>
     </div>
   );
-}
-
-// Separated Component for cleaner code
-function LeaderboardList({ data }) {
-  if (data.length === 0) {
-    return <div className="p-8 text-center text-slate-500">No data available yet.</div>;
-  }
-
-  return (
-    
-    <ul className="bg-white">
-      {data.map((user, index) => {
-        const rank = index + 1;
-        const isTop3 = rank <= 3;
-        
-        return (
-          <li 
-            key={index} 
-            className="group flex items-center justify-between p-4 sm:px-6 hover:bg-slate-50 transition-colors duration-200"
-          >
-            <div className="flex items-center gap-4">
-
-              <div className="shrink-0 w-8 text-center">
-                <RankBadge rank={rank} />
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Avatar className={`h-14 w-14 border-2 ${isTop3 ? 'border-indigo-100' : 'border-transparent'}`}>
-                  <AvatarImage src={user.profileavatarurl} alt={user.profilename} />
-                  <AvatarFallback className="bg-indigo-100 text-indigo-700 font-bold">
-                    {user.profilename?.charAt(0).toUpperCase() || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                
-                <div className="flex flex-col">
-                  <span className={`text-sm font-semibold ${isTop3 ? 'text-slate-900' : 'text-slate-700'}`}>
-                    {user.profilename}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {isTop3 && (
-              <div className="hidden sm:block">
-                 <Medal className={`w-5 h-5 ${getMedalColor(rank)} opacity-80`} />
-              </div>
-            )}
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
-
-// Helper component to style the rank numbers
-function RankBadge({ rank }) {
-  if (rank === 1) return <span className="flex justify-center"><Crown className="w-6 h-6 text-yellow-500 fill-yellow-500" /></span>;
-  if (rank === 2) return <span className="text-xl font-bold text-slate-400">#2</span>;
-  if (rank === 3) return <span className="text-xl font-bold text-orange-400">#3</span>;
-  return <span className="text-sm font-medium text-slate-400">#{rank}</span>;
-}
-
-// Helper for medal colors
-function getMedalColor(rank) {
-  switch (rank) {
-    case 1: return "text-yellow-500";
-    case 2: return "text-slate-400";
-    case 3: return "text-orange-400";
-    default: return "text-slate-200";
-  }
 }

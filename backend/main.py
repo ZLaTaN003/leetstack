@@ -6,6 +6,8 @@ import os
 import dotenv
 import requests
 from flask import request, jsonify
+from datetime import datetime, timedelta
+
 
 dotenv.load_dotenv()
 
@@ -20,13 +22,13 @@ CORS(
     app,
     origins=["*"],
     allow_headers=["Content-Type", "Authorization"],
-
 )
 app.register_blueprint(api_bp)
 
 
 @app.route("/api/update_profile", methods=["POST"])
 def update_profile():
+    """Update user profile with LeetCode stats."""
     query = """
     query getUserStats($username: String!) {
     matchedUser(username: $username) {
@@ -87,6 +89,7 @@ def update_profile():
                     "hardsolved": res["data"]["matchedUser"]["submitStatsGlobal"][
                         "acSubmissionNum"
                     ][3]["count"],
+            
                 }
             )
             .execute()
@@ -100,12 +103,64 @@ def update_profile():
         print("Error updating profile:", e)
         return jsonify({"error": str(e)}), 500
 
-@app.route("/api/get_leetcode_ranks", methods=["GET"])
-def get_leetcode_ranks():
+
+@app.route("/api/getlatestsubmissions", methods=["GET"])
+def get_latest_submissions():
+    """Get latest  LeetCode submissions for 7 days."""
     auth_header = request.headers.get("Authorization")
     if not auth_header or not auth_header.startswith("Bearer "):
         return jsonify({"error": "Unauthorized"}), 401
-    
+
+    token = auth_header.split(" ")[1]
+    user = app.dbclient.auth.get_user(token)
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+    username = request.args.get("username")
+    query = """
+    query recentSubmissions($username: String!) {
+  recentSubmissionList(username: $username) {
+    timestamp
+  }
+}
+"""
+    variables = {"username": username}
+
+    res = requests.post(
+        "https://leetcode.com/graphql",
+        json={"query": query, "variables": variables},
+        headers={"Content-Type": "application/json"},
+    )
+
+    today = datetime.now().date()
+    submissions = res.json()["data"]["recentSubmissionList"]
+    days = [today - timedelta(days=i) for i in range(1, 8)]
+
+    counts = {day: 0 for day in days}
+
+    for s in submissions:
+
+        date = datetime.fromtimestamp(int(s["timestamp"])).date()
+        if date in counts and counts[date] != 1:
+            counts[date] = 1
+
+    labels = [d.isoformat() for d in days]
+    values = [counts[d] for d in days]
+    return jsonify({"labels": labels, "values": values}), 200
+
+
+@app.route("/api/get_leetcode_ranks", methods=["GET"])
+def get_leetcode_ranks():
+    """Get LeetCode ranks of all users."""
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    token = auth_header.split(" ")[1]
+    user = app.dbclient.auth.get_user(token)
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    print("Fetching LeetCode ranks from database")
     try:
         profiles = (
             app.dbclient.table("profiles")
@@ -115,11 +170,42 @@ def get_leetcode_ranks():
             .order("leetrank")
             .execute()
         )
-        print(profiles,type(profiles))
         return jsonify(profiles.data), 200
     except Exception as e:
         print("Error fetching profiles:", e)
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/get_user_profile", methods=["GET"])
+def get_user_profile():
+    """Get LeetCode profile of a specific user."""
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    token = auth_header.split(" ")[1]
+    user = app.dbclient.auth.get_user(token)
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    username = request.args.get("username")
+
+    print("Fetching user stats for username from database:", username)
+    try:
+        profile = (
+            app.dbclient.table("profiles")
+            .select(
+                "profilename, profileavatarurl, leetrank, easysolved, mediumsolved, hardsolved"
+            )
+            .eq("profilename", username)
+            .single()
+            .execute()
+        )
+        return jsonify(profile.data), 200
+    except Exception as e:
+        print("Error fetching user profile:", e)
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True, host="127.0.0.1", port=5000)
