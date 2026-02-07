@@ -17,11 +17,13 @@ function App() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("Initial session:", session);
       setSession(session);
       setLoading(false);
     });
 
     const listener = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed:", event, session);
       setSession(session);
       setLoading(false);
     });
@@ -47,7 +49,7 @@ function App() {
       try {
         let username = session.user.user_metadata.leetcodename;
         const response = await fetch(
-          "https://leetsq.vercel.app/api/get_user_profile?username=" + username,
+          "http://127.0.0.1:5000/api/get_user_profile?username=" + username,
           {
             method: "GET",
             headers: {
@@ -58,6 +60,7 @@ function App() {
         );
         const userprofile = await response.json();
         setUserProfileData(userprofile);
+        console.log("Fetched user profile:", userprofile);
       } catch (error) {
         console.error("Failed to fetch user profile", error);
       }

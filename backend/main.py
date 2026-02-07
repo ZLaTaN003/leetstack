@@ -20,7 +20,7 @@ app.dbclient = supabase_client
 
 CORS(
     app,
-    origins=["http://localhost:3000", "https://leetsquad.vercel.app"],
+    origins=["http://localhost:3000", "https://leetsquad.vercel.app","http://localhost:5173"],
     allow_headers=["Content-Type", "Authorization"],
 )
 app.register_blueprint(api_bp)

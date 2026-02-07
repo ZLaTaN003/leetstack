@@ -45,7 +45,7 @@ export function ChartLineDefault({ session }) {
     const fetchData = async () => {
       try {
         const response = await fetch(
-          `https://leetsq.vercel.app/api/getlatestsubmissions?username=${username}`,
+          `http://127.0.0.1:5000/api/getlatestsubmissions?username=${username}`,
           {
             headers: {
               Authorization: `Bearer ${session.access_token}`,

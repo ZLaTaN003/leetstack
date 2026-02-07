@@ -18,7 +18,7 @@ export default function Home({ session,userprofile }) {
     if (!currentSession) return;
 
     try {
-      const response = await fetch("https://leetsq.vercel.app/api/update_profile", {
+      const response = await fetch("http://127.0.0.1:5000/api/update_profile", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -60,7 +60,7 @@ export default function Home({ session,userprofile }) {
     const fetchLeaderboard = async () => {
       try {
         const response = await fetch(
-          "https://leetsq.vercel.app/api/get_leetcode_ranks",
+          "http://127.0.0.1:5000/api/get_leetcode_ranks",
           {
             method: "GET",
             headers: {
@@ -70,6 +70,7 @@ export default function Home({ session,userprofile }) {
           },
         );
         const data = await response.json();
+        console.log("Fetched leaderboard data:", data);
         setGldata(data);
       } catch (error) {
         console.error("Failed to fetch leaderboard", error);
