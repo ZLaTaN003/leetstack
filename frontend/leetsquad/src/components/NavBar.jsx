@@ -26,6 +26,16 @@ function Navbar({ session, profileimage }) {
           <Home></Home>
         </Link>
 
+
+                  {session && (
+          <Link
+            to="/groups"
+            className="text-white text-lg font-bold ml-4"
+          >
+            Groups
+          </Link>
+        )}
+
         {session && (
           <button
             onClick={() => supabase.auth.signOut()}
@@ -34,6 +44,17 @@ function Navbar({ session, profileimage }) {
             Sign Out
           </button>
         )}
+
+   
+
+        {!session && (
+          <Link to="/" className="text-white text-lg font-semibold">
+            <User/>
+          </Link>
+        )}
+
+   
+        
       </div>
     </nav>
   );

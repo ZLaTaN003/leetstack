@@ -3,6 +3,7 @@ import { Trophy } from "lucide-react";
 import LeaderboardList from "@/components/ui/LeaderBoardList";
 import { ChartPieSimple } from "@/components/ui/PieChart";
 import { ChartLineDefault } from "@/components/ui/LineChart";
+import Navbar from "./components/NavBar.jsx";
 
 export default function Home({ session,userprofile }) {
 
@@ -17,7 +18,7 @@ export default function Home({ session,userprofile }) {
     if (!currentSession) return;
 
     try {
-      const response = await fetch("http://127.0.0.1:5000/api/update_profile", {
+      const response = await fetch("https://leetsq.vercel.app/api/update_profile", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -59,7 +60,7 @@ export default function Home({ session,userprofile }) {
     const fetchLeaderboard = async () => {
       try {
         const response = await fetch(
-          "http://127.0.0.1:5000/api/get_leetcode_ranks",
+          "https://leetsq.vercel.app/api/get_leetcode_ranks",
           {
             method: "GET",
             headers: {
@@ -90,7 +91,9 @@ export default function Home({ session,userprofile }) {
     );
 
   return (
-    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 w-full flex lg:flex-row flex-col items-center gap-20 bg-red-50 justify-center">
+
+    <>
+          <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 w-full flex lg:flex-row flex-col  gap-20 bg-red-50 justify-center">
       <div className="max-w-3xl w-full h-full">
         <div className=" min-h-100 bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200 flex justify-start flex-col">
           <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
@@ -135,5 +138,10 @@ export default function Home({ session,userprofile }) {
         </div>
       </div>
     </div>
+
+    
+    
+    </>
+    
   );
 }

@@ -2,8 +2,10 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "./supabaseClient";
 import Auth from "./Auth";
 import Home from "./Home";
-import { AppLayout } from "./components/layout/AppLayout";
 import Navbar from "./components/NavBar.jsx";
+import { Routes, Route } from "react-router-dom";
+import GroupCreatorMenu from './Group.jsx'
+
 function App() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -16,12 +18,10 @@ function App() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      console.log("Initial session:", session);
       setLoading(false);
     });
 
     const listener = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed:", event, session);
       setSession(session);
       setLoading(false);
     });
@@ -47,7 +47,7 @@ function App() {
       try {
         let username = session.user.user_metadata.leetcodename;
         const response = await fetch(
-          "http://127.0.0.1:5000/api/get_user_profile?username=" + username,
+          "https://leetsq.vercel.app/api/get_user_profile?username=" + username,
           {
             method: "GET",
             headers: {
@@ -58,7 +58,6 @@ function App() {
         );
         const userprofile = await response.json();
         setUserProfileData(userprofile);
-        console.log("Fetched user profile:", userprofile);
       } catch (error) {
         console.error("Failed to fetch user profile", error);
       }
@@ -78,10 +77,17 @@ function App() {
   return (
     <>
       <Navbar session={session} profileimage={userprofiledata?.profileavatarurl} />
-      <AppLayout>
-        {!session ? <Auth session={session} /> : <Home session={session} userprofile={userprofiledata} />}
-      </AppLayout>
+
+
+     <Routes>
+        <Route path='/groups' element={!session ? <Auth session={session} /> : <GroupCreatorMenu />} />
+
+        <Route path="/" element={!session ? <Auth session={session} /> :  <Home session={session} userprofile={userprofiledata} />}/>
+      </Routes>
+      
+
     </>
+  
   );
 }
 
