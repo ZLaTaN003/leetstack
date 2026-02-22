@@ -3,7 +3,6 @@ import { Trophy } from "lucide-react";
 import LeaderboardList from "@/components/ui/LeaderBoardList";
 import { ChartPieSimple } from "@/components/ui/PieChart";
 import { ChartLineDefault } from "@/components/ui/LineChart";
-import Navbar from "./components/NavBar.jsx";
 
 export default function Home({ session,userprofile }) {
 

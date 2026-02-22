@@ -4,7 +4,7 @@ import Auth from "./Auth";
 import Home from "./Home";
 import Navbar from "./components/NavBar.jsx";
 import { Routes, Route } from "react-router-dom";
-import GroupCreatorMenu from './Group.jsx'
+import GroupChat from './Group.jsx'
 
 function App() {
   const [session, setSession] = useState(null);
@@ -83,7 +83,7 @@ function App() {
 
 
      <Routes>
-        <Route path='/groups' element={!session ? <Auth session={session} /> : <GroupCreatorMenu />} />
+        <Route path='/groups' element={!session ? <Auth session={session} /> : <GroupChat session={session} />} />
 
         <Route path="/" element={!session ? <Auth session={session} /> :  <Home session={session} userprofile={userprofiledata} />}/>
       </Routes>

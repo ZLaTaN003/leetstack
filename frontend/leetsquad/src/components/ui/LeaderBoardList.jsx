@@ -63,10 +63,8 @@ function RankBadge({ rank }) {
 }
 
 function getMedalColor(rank) {
-  switch (rank) {
-    case 1: return "text-yellow-500";
-    case 2: return "text-slate-400";
-    case 3: return "text-orange-400";
-    default: return "text-slate-200";
-  }
+  if (rank === 1) return "text-yellow-400";
+  if (rank === 2) return "text-gray-400";
+  if (rank === 3) return "text-orange-400";
+  return "text-transparent";
 }

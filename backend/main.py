@@ -20,7 +20,11 @@ app.dbclient = supabase_client
 
 CORS(
     app,
-    origins=["http://localhost:3000", "https://leetsquad.vercel.app","http://localhost:5173"],
+    origins=[
+        "http://localhost:3000",
+        "https://leetsquad.vercel.app",
+        "http://localhost:5173",
+    ],
     allow_headers=["Content-Type", "Authorization"],
 )
 app.register_blueprint(api_bp)
@@ -89,7 +93,6 @@ def update_profile():
                     "hardsolved": res["data"]["matchedUser"]["submitStatsGlobal"][
                         "acSubmissionNum"
                     ][3]["count"],
-            
                 }
             )
             .execute()
@@ -167,12 +170,92 @@ def get_leetcode_ranks():
             .select(
                 "profilename, profileavatarurl, leetrank, easysolved, mediumsolved, hardsolved"
             )
-            .order("leetrank")
+            .limit(10)
             .execute()
+
         )
-        return jsonify(profiles.data), 200
+        data = profiles.data
+
+        for p in data:
+            p["score"] = (
+                p["hardsolved"] * 5
+                + p["mediumsolved"] * 3
+                + p["easysolved"]
+            )
+
+        data.sort(key=lambda x: x["score"], reverse=True)
+
+        return jsonify(data), 200
     except Exception as e:
         print("Error fetching profiles:", e)
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/get_group_leaderboard/<string:group_id>", methods=["GET"])
+def get_group_leaderboard(group_id):
+    """Get leaderboard for a specific group."""
+
+   
+    
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    token = auth_header.split(" ")[1]
+    user = app.dbclient.auth.get_user(token)
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+
+    
+
+    try:
+        group = (
+            app.dbclient.table("groups")
+            .select("id")
+            .eq("id",group_id)
+            .single()
+            .execute()
+        )
+
+        if not group.data:
+            return jsonify({"error": "Group not found"}), 404
+
+        members = (
+            app.dbclient.table("group_members")
+            .select("user_id")
+            .eq("group_id", group.data["id"])
+            .execute()
+        )
+         
+        user_ids = [member["user_id"] for member in members.data]
+
+        if not user_ids:
+            return jsonify([]), 200
+
+        profiles = (
+            app.dbclient.table("profiles")
+            .select(
+                "profilename, profileavatarurl, leetrank, easysolved, mediumsolved, hardsolved"
+            )
+            .in_("profileid", user_ids)
+            .execute()
+        )
+
+
+        data = profiles.data
+
+        for p in data:
+            p["score"] = (
+                p["hardsolved"] * 5
+                + p["mediumsolved"] * 3
+                + p["easysolved"]
+            )
+
+        data.sort(key=lambda x: x["score"], reverse=True)
+        return jsonify(data), 200
+    except Exception as e:
+        print("Error fetching group leaderboard:", e)
         return jsonify({"error": str(e)}), 500
 
 
