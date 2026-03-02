@@ -127,7 +127,7 @@ def get_latest_submissions():
 }
 """
     variables = {"username": username}
-
+    print("Fetching recent submissions from LeetCode API for:", username)
     res = requests.post(
         "https://leetcode.com/graphql",
         json={"query": query, "variables": variables},

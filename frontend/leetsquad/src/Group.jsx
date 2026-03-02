@@ -1,20 +1,22 @@
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect } from "react";
 import { PlusCircle } from "lucide-react";
 import { Trophy } from "lucide-react";
 import { supabase } from "./supabaseClient";
 import LeaderboardList from "@/components/ui/LeaderBoardList";
 import { Users } from "lucide-react";
 import { Loader2 } from "lucide-react";
-
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 function Chat({ session }) {
   const [activeGroupId, setActiveGroupId] = useState(null);
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(false);
   const [leaderboardloading, setLeaderboardLoading] = useState(false);
-  // 1. Groups Data
+
   const [groups, setGroups] = useState([]);
   const [groupLeaderboard, setGroupLeaderboard] = useState([]);
+
+  const [messages, setMessages] = useState([]);
 
   useEffect(() => {
     const fetchGroups = async () => {
@@ -50,9 +52,8 @@ function Chat({ session }) {
       return;
     }
 
-    
     setLeaderboardLoading(true);
-    
+
     const fetchGroupLeaderboard = async () => {
       try {
         const response = await fetch(
@@ -61,7 +62,7 @@ function Chat({ session }) {
             headers: {
               Authorization: `Bearer ${session?.access_token}`,
             },
-          }
+          },
         );
 
         const data = await response.json();
@@ -71,35 +72,99 @@ function Chat({ session }) {
         console.error("Error fetching group leaderboard:", error);
       }
 
-        setLeaderboardLoading(false);
-
+      setLeaderboardLoading(false);
     };
-
-
 
     fetchGroupLeaderboard();
   }, [activeGroupId]);
 
-  // 2. Messages Data
-  const [messages, setMessages] = useState([
-    { id: 1, groupId: 1, sender: "Alice", text: "Hello world!" },
-    { id: 2, groupId: 1, sender: "You", text: "Hey Alice, how are you?" },
-    { id: 3, groupId: 2, sender: "Bob", text: "Anyone here?" },
-  ]);
+  useEffect(() => {
+    if (!activeGroupId) return;
 
-  // --- HANDLERS ---
-  const handleSendMessage = (e) => {
+    const fetchMessages = async () => {
+      const { data, error } = await supabase
+        .from("messages")
+        .select(
+          `
+        id,
+        content,
+        created_at,
+        sender_id,
+        profiles ( profilename,profileavatarurl )
+      `,
+        )
+        .eq("group_id", activeGroupId)
+        .order("created_at", { ascending: true });
+
+      console.log("Fetched messages for group", activeGroupId, data);
+
+      if (error) {
+        console.error("Error fetching messages:", error);
+        return;
+      }
+
+      setMessages(data);
+    };
+
+    fetchMessages();
+  }, [activeGroupId]);
+
+  useEffect(() => {
+    if (!activeGroupId) return;
+
+    const channel = supabase
+      .channel("group-messages")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `group_id=eq.${activeGroupId}`,
+        },
+        async (payload) => {
+          // Fetch sender profile
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("profilename")
+            .eq("profileid", payload.new.sender_id)
+            .single();
+
+          setMessages((prev) => [
+            ...prev,
+            {
+              ...payload.new,
+              profiles: profile,
+            },
+          ]);
+        },
+      )
+      .subscribe();
+
+    console.log("Subscribed to real-time messages for group:", activeGroupId);
+    console.log("Current messages:", messages);
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [activeGroupId]);
+
+  const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!inputText.trim()) return;
 
-    const newMessage = {
-      id: Date.now(),
-      groupId: activeGroupId,
-      sender: "You",
-      text: inputText,
-    };
+    const { error } = await supabase.from("messages").insert([
+      {
+        content: inputText,
+        group_id: activeGroupId,
+      },
+    ]);
 
-    setMessages([...messages, newMessage]);
+    if (error) {
+      console.error("Error sending message:", error);
+      return;
+    }
+
     setInputText("");
   };
 
@@ -152,7 +217,7 @@ function Chat({ session }) {
   };
 
   const handleGroupJoin = async () => {
-    const joinKey = prompt("Enter group join key:");
+    const joinKey = prompt("Enter group name to join:");
     if (!joinKey) return;
     setLoading(true);
     const { data: groupdata, error } = await supabase
@@ -191,7 +256,6 @@ function Chat({ session }) {
     setLoading(false);
   };
 
-  const currentMessages = messages.filter((m) => m.groupId === activeGroupId);
   console.log(groups, "thiis", activeGroupId);
   const activeGroupName =
     groups.find((g) => g.id === activeGroupId)?.name || "Unknown Group";
@@ -199,28 +263,22 @@ function Chat({ session }) {
   // --- RENDER ---
   return (
     <>
-    
       <div className="flex h-screen font-sans bg-red-50 p-6">
         {/* LEFT SIDE: LEADERBOARD */}
-
-
 
         <div className="max-w-3xl w-full h-full mr-4">
           <div className=" min-h-100 bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200 flex justify-start flex-col">
             <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
               <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
-                
                 <Trophy className="w-5 h-5 text-yellow-500" />
-
-                
                 Current Standings
               </h3>
               <span className="text-1xl font-medium px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800">
-                  {leaderboardloading ? "Loading..." : `${groupLeaderboard.length} Participants`}
+                {leaderboardloading
+                  ? "Loading..."
+                  : `${groupLeaderboard.length} Participants`}
               </span>
             </div>
-
-          
 
             <LeaderboardList
               data={groupLeaderboard}
@@ -231,7 +289,6 @@ function Chat({ session }) {
 
         {/* LEFT SIDEBAR: GROUPS */}
 
-       
         <div className="w-32  border-gray-300 flex flex-col bg-white shadow-lg rounded-t-2xl">
           <div className="p-4 border-b border-gray-300 flex justify-between items-center h-16">
             <h3 className="font-bold text-gray-700">Groups</h3>
@@ -258,54 +315,72 @@ function Chat({ session }) {
           <div className="p-4 border-b border-gray-300 flex justify-between items-center h-16 bg-white rounded-t-2xl">
             <h3 className="font-bold text-lg">{activeGroupName} </h3>
 
+            <div className="flex gap-4">
+              <button onClick={handleGroupJoin}>
+                <Users className="w-8 h-8" />
+              </button>
 
-              <div className="flex gap-4">
-
-        
-            <button onClick={handleGroupJoin}>
-              <Users className="w-8 h-8" />
-            </button>
-
-                <button onClick={handleCreateGroup}>
-              <PlusCircle className="w-8 h-8" />
-            </button>
-
-              </div>
+              <button onClick={handleCreateGroup}>
+                <PlusCircle className="w-8 h-8" />
+              </button>
+            </div>
           </div>
 
           {/* Messages List */}
-               {loading && (
-        <div className="flex items-center justify-center h-screen">
-          <Loader2 className="w-12 h-12 text-gray-400 animate-spin" />
-        </div>
-      )}
-          <div className="flex-1 p-5 overflow-y-auto flex flex-col space-y-2 bg-white">
-            {currentMessages.map((msg) => {
-              const isMe = msg.sender === "You";
+          {loading && (
+            <div className="flex items-center justify-center h-screen">
+              <Loader2 className="w-12 h-12 text-gray-400 animate-spin" />
+            </div>
+          )}
+          <div className="flex-1 p-5 overflow-y-auto flex flex-col space-y-4 bg-white">
+            {messages.map((msg) => {
+              const isMe = msg.sender_id === session.user.id;
+
               return (
                 <div
                   key={msg.id}
-                  className={`max-w-[60%] px-4 py-2 rounded-2xl leading-snug ${
-                    isMe
-                      ? "self-end bg-blue-500 text-white"
-                      : "self-start bg-gray-100 text-black"
+                  className={`flex items-end gap-2 ${
+                    isMe ? "justify-end" : "justify-start"
                   }`}
                 >
                   {!isMe && (
-                    <small className="block text-xs opacity-70 mb-1">
-                      {msg.sender}
-                    </small>
+                    <Avatar className="w-12 h-12">
+                      <AvatarImage src={msg.profiles?.profileavatarurl} />
+                      <AvatarFallback>
+                        {msg.profiles?.profilename?.[0]?.toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
                   )}
-                  <div>{msg.text}</div>
+
+                  <div
+                    className={`max-w-[60%] px-4 py-2 rounded-2xl shadow ${
+                      isMe
+                        ? "bg-blue-500 text-white rounded-br-none"
+                        : "bg-gray-100 text-black rounded-bl-none"
+                    }`}
+                  >
+                    <div className="text-sm font-semibold mb-1 opacity-70">
+                      {msg.profiles?.profilename}
+                    </div>
+
+                    <div className="text-lg">{msg.content}</div>
+                    <div className="text-[14px] opacity-60 text-right mt-1">
+                      {new Date(msg.created_at).toLocaleString("en-GB")}
+                    </div>
+                  </div>
+
+                  {isMe && (
+                    <Avatar className="w-12 h-12">
+                      <AvatarImage src={msg.profiles?.profileavatarurl} />
+                      <AvatarFallback>
+                        {msg.profiles?.profilename?.[0]?.toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
                 </div>
               );
             })}
-            {currentMessages.length === 0 && (
-              <p className="text-gray-400 text-center mt-4">No messages yet.</p>
-            )}
           </div>
-
-          {/* Input Area */}
           <form
             onSubmit={handleSendMessage}
             className="p-5 border-t border-gray-300 flex gap-2 bg-white rounded-b-2xl"

@@ -1,6 +1,5 @@
-
-import { TrendingUp } from "lucide-react"
 import { CartesianGrid, Line, LineChart, XAxis } from "recharts"
+import { useRef} from "react"
 
 import {
   Card,
@@ -27,8 +26,11 @@ const chartConfig = {
   },
 }
 
+
 export function ChartLineDefault({ session }) {
   const username = session?.user?.user_metadata?.leetcodename ?? null;
+  const hasFetched = useRef(false);
+
 
   function buildChartData(labels, values) {
     return labels.map((label, index) => ({
@@ -41,6 +43,12 @@ export function ChartLineDefault({ session }) {
 
   useEffect(() => {
     if (!session || !username) return;
+
+    if (hasFetched.current) {
+      console.log("Already fetched chart data");
+      return;
+    }
+    hasFetched.current = true;
 
     const fetchData = async () => {
       try {
