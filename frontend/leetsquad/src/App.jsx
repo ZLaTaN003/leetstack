@@ -5,7 +5,7 @@ import Home from "./Home";
 import Navbar from "./components/NavBar.jsx";
 import { Routes, Route } from "react-router-dom";
 import GroupChat from './Group.jsx'
-
+import Landing from "./Landing.jsx";
 function App() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -23,7 +23,6 @@ function App() {
     });
 
     const listener = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed:", event, session);
       setSession(session);
       setLoading(false);
     });
@@ -49,7 +48,7 @@ function App() {
       try {
         let username = session.user.user_metadata.leetcodename;
         const response = await fetch(
-          "http://127.0.0.1:5000/api/get_user_profile?username=" + username,
+          "https://leetsq.vercel.app/api/get_user_profile?username=" + username,
           {
             method: "GET",
             headers: {
@@ -60,7 +59,6 @@ function App() {
         );
         const userprofile = await response.json();
         setUserProfileData(userprofile);
-        console.log("Fetched user profile:", userprofile);
       } catch (error) {
         console.error("Failed to fetch user profile", error);
       }
@@ -79,13 +77,14 @@ function App() {
 
   return (
     <>
-      <Navbar session={session} profileimage={userprofiledata?.profileavatarurl} />
+     {session && <Navbar session={session} profileimage={userprofiledata?.profileavatarurl} />}
 
 
      <Routes>
-        <Route path='/groups' element={!session ? <Auth session={session} /> : <GroupChat session={session} />} />
+        <Route path="/" element={!session ? <Landing /> :  <Home session={session} userprofile={userprofiledata} />}/>
 
-        <Route path="/" element={!session ? <Auth session={session} /> :  <Home session={session} userprofile={userprofiledata} />}/>
+        <Route path='/groups' element={!session ? <Landing /> : <GroupChat session={session} />} />
+
       </Routes>
       
 

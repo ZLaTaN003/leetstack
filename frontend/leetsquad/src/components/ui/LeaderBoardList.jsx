@@ -9,7 +9,7 @@ export default function LeaderboardList({ data,username }) {
 
   return (
     
-    <ul className="bg-white m-0 p-0">
+    <ul className="bg-[#18181b] m-0 p-0">
       {data.slice(0, 10).map((user, index) => {
         const rank = index + 1;
         const isTop3 = rank <= 3;
@@ -18,7 +18,7 @@ export default function LeaderboardList({ data,username }) {
         return (
           <li 
             key={index} 
-            className={`group flex items-center justify-between p-4 sm:px-6 hover:bg-slate-50 transition-colors duration-200 ${highlight ? 'bg-indigo-100' : ''}`}
+            className={`group flex items-center justify-between p-4 sm:px-6 hover:bg-white/5 transition-colors duration-200 ${highlight ? 'bg-white/5' : ''}`}
           >
             <div className="flex items-center gap-4">
 
@@ -35,8 +35,9 @@ export default function LeaderboardList({ data,username }) {
                 </Avatar>
                 
                 <div className="flex flex-col">
-                  <span className={`text-sm font-semibold ${isTop3 ? 'text-slate-900' : 'text-slate-700'}`}>
-                    <a href={`https://leetcode.com/u/${user.profilename}`} target="_blank" rel="noopener noreferrer">{user.profilename}</a>
+<span className={`text-sm font-semibold ${
+  isTop3 ? 'text-zinc-100' : 'text-zinc-300'
+}`}>                    <a href={`https://leetcode.com/u/${user.profilename}`} target="_blank" rel="noopener noreferrer">{user.profilename}</a>
                   </span>
                 </div>
                 

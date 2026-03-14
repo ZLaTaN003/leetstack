@@ -72,7 +72,7 @@ export function ChartLineDefault({ session }) {
   }, [session, username]);
 
   return (
-    <Card>
+    <Card className="bg-[#18181b] border border-[#27272a] text-[#fafafa] ">
       <CardHeader>
         <CardTitle>Last 7 Days LeetCode Progress</CardTitle>
         <CardDescription>Lastest Activity</CardDescription>

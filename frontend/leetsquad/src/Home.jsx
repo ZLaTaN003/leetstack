@@ -93,11 +93,11 @@ export default function Home({ session,userprofile }) {
   return (
 
     <>
-          <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 w-full flex lg:flex-row flex-col  gap-20 bg-red-50 justify-center">
+          <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 w-full flex lg:flex-row flex-col  gap-20 bg-[#09090b]  justify-center">
       <div className="max-w-3xl w-full h-full">
-        <div className=" min-h-100 bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200 flex justify-start flex-col">
-          <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
+        <div className=" min-h-100 bg-[#18181b]  rounded-2xl shadow-xl overflow-hidden border border-[#27272a] flex justify-start flex-col">
+          <div className="px-6 py-5 border-b  bg-[#27272a] flex justify-between items-center">
+            <h3 className="text-lg font-semibold text-[#fafafa] flex items-center gap-2">
               <Trophy className="w-5 h-5 text-yellow-500" />
               Current Standings
             </h3>

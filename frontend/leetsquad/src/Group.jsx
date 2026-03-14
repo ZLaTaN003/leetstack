@@ -263,13 +263,13 @@ function Chat({ session }) {
   // --- RENDER ---
   return (
     <>
-      <div className="flex h-screen font-sans bg-red-50 p-6">
+      <div  className="flex flex-col md:flex-row h-screen font-sans bg-[#09090b] p-6">
         {/* LEFT SIDE: LEADERBOARD */}
 
         <div className="max-w-3xl w-full h-full mr-4">
-          <div className=" min-h-100 bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200 flex justify-start flex-col">
-            <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
+          <div className=" min-h-100 bg-[#18181b] rounded-2xl shadow-xl overflow-hidden border border-[#27272a] flex justify-start flex-col">
+            <div className="px-6 py-5 border-b  bg-[#27272a] flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-[#fafafa] flex items-center gap-2">
                 <Trophy className="w-5 h-5 text-yellow-500" />
                 Current Standings
               </h3>
@@ -289,9 +289,13 @@ function Chat({ session }) {
 
         {/* LEFT SIDEBAR: GROUPS */}
 
-        <div className="w-32  border-gray-300 flex flex-col bg-white shadow-lg rounded-t-2xl">
+        
+
+        
+
+        <div className="w-32  border-gray-300 flex flex-col bg-[#18181b] shadow-lg rounded-t-2xl">
           <div className="p-4 border-b border-gray-300 flex justify-between items-center h-16">
-            <h3 className="font-bold text-gray-700">Groups</h3>
+            <h3 className="font-bold text-[#fafafa]">Groups</h3>
           </div>
 
           <div className="flex-1">
@@ -299,8 +303,8 @@ function Chat({ session }) {
               <div
                 key={group.id}
                 onClick={() => setActiveGroupId(group.id)}
-                className={`p-4 cursor-pointer border-b border-gray-200 hover:bg-gray-100 transition ${
-                  activeGroupId === group.id ? "bg-gray-200 font-semibold" : ""
+                className={`p-4 text-[#fafafa] cursor-pointer border-b border-[#27272a] hover:bg-[#27272a] transition ${
+                  activeGroupId === group.id ? "bg-[#27272a] font-semibold" : ""
                 }`}
               >
                 # {group.name}
@@ -310,18 +314,19 @@ function Chat({ session }) {
         </div>
 
         {/* RIGHT SIDE: CHAT AREA */}
+        
         <div className="flex-1 flex flex-col shadow-lg">
           {/* Chat Header */}
-          <div className="p-4 border-b border-gray-300 flex justify-between items-center h-16 bg-white rounded-t-2xl">
-            <h3 className="font-bold text-lg">{activeGroupName} </h3>
+          <div className="p-4 border-b border-[#27272a] flex justify-between items-center h-16 bg-[#18181b] rounded-t-2xl">
+            <h3 className="font-bold text-lg text-[#fafafa]">{activeGroupName} </h3>
 
             <div className="flex gap-4">
               <button onClick={handleGroupJoin}>
-                <Users className="w-8 h-8" />
+                <Users className="w-8 h-8 text-[#fafafa]" />
               </button>
 
               <button onClick={handleCreateGroup}>
-                <PlusCircle className="w-8 h-8" />
+                <PlusCircle className="w-8 h-8 text-[#fafafa]" />
               </button>
             </div>
           </div>
@@ -332,7 +337,7 @@ function Chat({ session }) {
               <Loader2 className="w-12 h-12 text-gray-400 animate-spin" />
             </div>
           )}
-          <div className="flex-1 p-5 overflow-y-auto flex flex-col space-y-4 bg-white">
+          <div className="flex-1 p-5 overflow-y-auto flex flex-col space-y-4 bg-[#09090b]">
             {messages.map((msg) => {
               const isMe = msg.sender_id === session.user.id;
 
@@ -383,14 +388,14 @@ function Chat({ session }) {
           </div>
           <form
             onSubmit={handleSendMessage}
-            className="p-5 border-t border-gray-300 flex gap-2 bg-white rounded-b-2xl"
+            className="p-5 border-t border-[#27272a] flex gap-2 bg-[#18181b] rounded-b-2xl"
           >
             <input
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               placeholder="Type a message..."
-              className="flex-1 p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 p-2 border border-[#27272a] rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#18181b] text-[#fafafa]"
             />
             <button
               type="submit"

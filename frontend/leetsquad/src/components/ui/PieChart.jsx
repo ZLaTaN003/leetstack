@@ -41,7 +41,7 @@ const chartConfig = {
 export function ChartPieSimple({chartData,totalsolved}) {
    
   return (
-    <Card className="flex flex-col">
+    <Card className="flex flex-col bg-[#18181b] border border-[#27272a] text-[#fafafa]">
       <CardHeader className="items-center pb-0">
         <CardTitle>Problems by Difficulty</CardTitle>
         <CardDescription>LeetCode Problems Solved by Difficulty</CardDescription>

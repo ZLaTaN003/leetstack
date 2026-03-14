@@ -6,7 +6,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 function Navbar({ session, profileimage }) {
   return (
-    <nav className="flex bg-purple-400 justify-evenly">
+    <nav className="flex bg-[#09090b] justify-evenly border-b border-white/10">
 
       <div className="w-full px-4 py-3 flex justify-between items-center">
         {session &&   (<div className="font-semibold flex gap-2 items-center text-white">
