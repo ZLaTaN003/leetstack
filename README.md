@@ -1,48 +1,104 @@
 # LeetSquad
 
-## Leetcode Performance Tracker and Dashboard
+## LeetCode Performance Tracker and Dashboard
+
+Live: https://leetsquad.vercel.app/
 
 
-![demo](https://i.ibb.co/5W31J6PD/Screenshot-from-2026-02-02-19-21-50.png)
+![Dashboard](images/dashboard.png)
 
-## Setup Instructions
 
-Clone the repo
+LeetSquad helps you track LeetCode progress and compete with friends in groups.
+
+---
+
+## Features
+
+* **LeetCode Profile Sync**
+  Link your LeetCode username and automatically sync solved problems and stats.
+
+* **Progress Tracking**
+  View coding activity, charts, and statistics.
+
+* **Groups & Leaderboards**
+  Create groups with friends and compare performance.
+
+* **Realtime Chat**
+  Chat with group members while solving problems.
+
+
+
+![Group](images/group.png)
+
+---
+
+## Tech Stack
+
+* **Frontend:** React (Vite)
+* **Backend:** Python API
+* **Database & Auth:** Supabase
+* **Realtime Messaging:** Supabase Realtime
+* **Deployment:** Vercel
+
+---
+
+## Setup
+
+Clone the repository
+
 ```bash
 git clone https://github.com/you/leetstack.git
 cd leetstack
 ```
-For python backend
 
-Create environment variables
-Create a .env file inside the backend directory:
+---
 
+## Backend Setup
+
+Create a `.env` file inside **backend**
+
+```
 SUPABASE_URL=your_supabase_project_url
 SUPABASE_KEY=your_supabase_secret_key
+```
 
+Run backend
 
 ```bash
-cd ./leetstack/backend #from project root
+cd backend
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 python main.py
+```
+
+Backend runs at
 
 ```
-Backend will run at http://localhost:5000
+http://localhost:5000
+```
 
+---
 
-For react frontend
+## Frontend Setup
 
-Create a .env file inside the frontend/leetsquad directory:
+Create a `.env` file inside **frontend/leetsquad**
 
+```
 VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_KEY=your_supabase_public_key
+```
+
+Run frontend
 
 ```bash
-cd ./leetstack/frontend/leetsquad #from the project root 
+cd frontend/leetsquad
 npm install
 npm run dev
 ```
-Frontend will run at
+
+Frontend runs at
+
+```
 http://localhost:5173
+```
